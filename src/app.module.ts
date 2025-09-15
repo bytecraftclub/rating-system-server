@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import appConfig from './config/app.config';
 import * as Joi from 'joi';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { UserModule } from './user/user.module';
 
 
 @Module({
@@ -38,6 +39,9 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
       };
     },
   }),
+
+
+    UserModule,
 
   ],
   controllers: [AppController],
