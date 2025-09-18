@@ -6,6 +6,8 @@ import appConfig from './config/app.config';
 import * as Joi from 'joi';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
+import { FileUploadModule } from './file-upload/file-upload.module';
 
 @Module({
   imports: [
@@ -44,6 +46,8 @@ import { UserModule } from './user/user.module';
     }),
 
     UserModule,
+    AuthModule,
+    FileUploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],
