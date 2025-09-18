@@ -21,9 +21,7 @@ export class AuthController {
   // Google OAuth2 login endpoint
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  async googleAuth() {
-    // This will redirect to Google's OAuth2 consent screen
-  }
+  async googleAuth() {}
 
   // Google OAuth2 callback endpoint
   @Get('google/callback')
