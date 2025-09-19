@@ -28,35 +28,43 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async googleAuthRedirect(@Req() req, @Res() res) {
     try {
-      const user = req.user as User;
-      const loginResponse = await this.authService.login(user);
+      const googleUser = req.user as User;
 
-      // Redirect to frontend with token (adjust URL as needed)
-      return res.redirect(
-        `${process.env.FRONTEND_URL}/auth/success?token=${loginResponse.access_token}&user=${encodeURIComponent(JSON.stringify(loginResponse.user))}`,
-      );
+      const myAppUser = await this.authService.findOrCreateUser(googleUser);
+      const loginResponse = await this.authService.login(myAppUser);
+
+      return res.send(`
+      <html>
+        <body>
+          <script>
+            window.opener.postMessage({
+              type: 'OAUTH_SUCCESS',
+              token: '${loginResponse.access_token}',
+              user: ${JSON.stringify(loginResponse.user)}
+            }, '${process.env.FRONTEND_URL}');
+            window.close();
+          </script>
+        </body>
+      </html>
+    `);
     } catch (error) {
-      // Redirect to frontend with error
-      return res.redirect(
-        `${process.env.FRONTEND_URL}/auth/error?message=${encodeURIComponent(error.message)}`,
-      );
+      return res.send(`
+      <html>
+        <body>
+          <script>
+            window.opener.postMessage({
+              type: 'OAUTH_ERROR',
+              message: '${error.message}'
+            }, '${process.env.FRONTEND_URL}');
+            window.close();
+          </script>
+        </body>
+      </html>
+    `);
     }
   }
 
   // Get current user profile (protected route)
-  @Get('profile')
-  @UseGuards(JwtAuthGuard)
-  async getProfile(@Req() req) {
-    const user = req.user as User;
-    return {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      picture: user.picture,
-      isActive: user.isActive,
-      score: user.score,
-    };
-  }
 
   // Manual login endpoint (if needed for other auth methods)
   @Post('login')
@@ -83,18 +91,9 @@ export class AuthController {
   }
 
   // Get all users (admin functionality)
-  @Get('users')
-  @UseGuards(JwtAuthGuard)
-  async getAllUsers() {
-    return this.authService.getAllUsers();
-  }
-
-  // Deactivate user (admin functionality)
-  @Post('deactivate/:id')
-  @UseGuards(JwtAuthGuard)
-  async deactivateUser(@Req() req) {
-    const params = req.params as { id: string };
-    await this.authService.deactivateUser(params.id);
-    return { message: 'User deactivated successfully' };
-  }
+  // @Get('users')
+  // @UseGuards(JwtAuthGuard)
+  // async getAllUsers() {
+  //   return this.authService.getAllUsers();
+  //}
 }
