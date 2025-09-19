@@ -14,59 +14,67 @@ export interface LoginResponse {
   };
 }
 
+// auth.service.ts
 @Injectable()
 export class AuthService {
   constructor(
     private jwtService: JwtService,
-    @InjectRepository(User)
+    @InjectRepository(User) // Assuming you use TypeORM
     private userRepository: Repository<User>,
   ) {}
 
-  async validateGoogleUser(profile: any): Promise<User> {
-    const { id, emails, displayName, photos } = profile;
-    const email = emails[0]?.value;
+  async findOrCreateUser(googleUser): Promise<User> {
+    // 1. Try to find a user by their Google ID
+    let user = await this.userRepository.findOneBy({ googleId: googleUser.id });
 
-    // Check if email has @estin.dz domain
-    if (!email || !email.endsWith('@estin.dz')) {
-      throw new UnauthorizedException(
-        'Only @estin.dz email addresses are allowed',
-      );
+    if (user) {
+      // If found, update any relevant details that might have changed on Google's side
+      user.email = googleUser.email;
+      user.firstName = googleUser.firstName;
+      user.lastName = googleUser.lastName;
+      user.avatar = googleUser.picture;
+      await this.userRepository.save(user);
+      return user;
     }
 
-    // Try to find existing user
-    let user = await this.userRepository.findOne({
-      where: { googleId: id },
+    // 2. If not found by Google ID, try to find by email (optional but useful)
+    user = await this.userRepository.findOneBy({ email: googleUser.email });
+    if (user) {
+      // This means a user with this email already exists (e.g., signed up with email/password).
+      // You can link the accounts by adding the GoogleId to the existing user.
+      user.googleId = googleUser.id;
+      await this.userRepository.save(user);
+      return user;
+    }
+
+    // 3. If no user exists at all, create a new one
+    const newUser = this.userRepository.create({
+      email: googleUser.email,
+      firstName: googleUser.firstName,
+      lastName: googleUser.lastName,
+      avatar: googleUser.picture,
+      googleId: googleUser.id, // Crucial: save the provider's ID
+      // provider: 'google', // You can also add a provider field
     });
 
-    if (!user) {
-      // Create new user
-      user = this.userRepository.create({
-        googleId: id,
-        email,
-        name: displayName,
-        picture: photos[0]?.value,
-      });
-      user = await this.userRepository.save(user);
-    } else {
-      // Update existing user info (in case profile changed)
-      user.name = displayName;
-      user.picture = photos[0]?.value;
-      user = await this.userRepository.save(user);
-    }
-
-    // Check if user is still active
-    if (!user.isActive) {
-      throw new UnauthorizedException('Your account has been deactivated');
-    }
-
-    return user;
+    await this.userRepository.save(newUser);
+    return newUser;
   }
 
-  async login(user: User): Promise<LoginResponse> {
+  async login(user: User) {
+    // This remains the same, now acting on your DB User entity
+    const payload = { email: user.email, sub: user.id };
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: { id: user.id, email: user.email, name: user.firstName }, // Sanitize user object for client
+    };
+  }
+
+  async login2(user: User): Promise<LoginResponse> {
     const payload = {
       sub: user.id,
       email: user.email,
-      name: user.name,
+      name: user.firstName,
     };
 
     return {
@@ -74,8 +82,8 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
-        picture: user.picture,
+        name: user.firstName,
+        picture: user.avatar,
       },
     };
   }
@@ -103,10 +111,69 @@ export class AuthService {
   async deactivateUser(id: string): Promise<void> {
     await this.userRepository.update(id, { isActive: false });
   }
-
   async getAllUsers(): Promise<User[]> {
     return this.userRepository.find({
-      select: ['id', 'email', 'name', 'picture', 'isActive', 'score'],
+      select: [
+        'id',
+        'email',
+        'firstName',
+        'lastName',
+        'avatar',
+        'isActive',
+        'score',
+      ],
     });
+  }
+  async validateGoogleUser(profile: any): Promise<User> {
+    const { id, emails, displayName, photos } = profile;
+    const email = emails[0]?.value;
+
+    // Check if email has @estin.dz domain
+    if (!email || !email.endsWith('@estin.dz')) {
+      throw new UnauthorizedException(
+        'Only @estin.dz email addresses are allowed',
+      );
+    }
+
+    // Try to find existing user
+    let user = await this.userRepository.findOne({
+      where: { googleId: id },
+    });
+
+    if (!user) {
+      // Create new user
+      const splitName = (displayName: string) => {
+        const names = displayName.split(' ');
+        const firstName = names[0];
+        const lastName = names.length > 1 ? names.slice(1).join(' ') : '';
+        return { firstName, lastName };
+      };
+
+      // In your create method
+      const { firstName, lastName } = splitName(displayName);
+
+      user = this.userRepository.create({
+        googleId: id,
+        email,
+        firstName,
+        lastName,
+        avatar: photos[0]?.value, // Keep as avatar
+        isActive: true,
+        score: 0,
+      });
+      user = await this.userRepository.save(user);
+    } else {
+      // Update existing user info (in case profile changed)
+      user.firstName = displayName;
+      user.avatar = photos[0]?.value;
+      user = await this.userRepository.save(user);
+    }
+
+    // Check if user is still active
+    if (!user.isActive) {
+      throw new UnauthorizedException('Your account has been deactivated');
+    }
+
+    return user;
   }
 }
