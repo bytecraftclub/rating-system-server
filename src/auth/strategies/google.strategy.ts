@@ -22,7 +22,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       clientSecret,
       callbackURL:
         process.env.GOOGLE_CALLBACK_URL ||
-        'http://localhost:3000/auth/google/callback',
+        'http://localhost:3009/auth/google/callback', // ← Change to your backend port
       scope: ['email', 'profile'],
     });
 
