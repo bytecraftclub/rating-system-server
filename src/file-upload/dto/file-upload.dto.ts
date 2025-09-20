@@ -1,7 +1,23 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
-export class UpdateFileDto {
-  @IsOptional()
+export class CreateFileUploadDto {
   @IsString()
-  originalName?: string;
+  @IsNotEmpty()
+  originalName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  mimeType: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  fileSize: number;
+
+  @IsNumber()
+  @IsOptional()
+  taskId?: number;
+
+  @IsNumber()
+  @IsOptional()
+  userId?: number;
 }
