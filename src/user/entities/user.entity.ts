@@ -1,9 +1,11 @@
+import { FileUpload } from 'src/file-upload/entities/file-upload.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 
 @Entity('users')
@@ -31,4 +33,7 @@ export class User {
 
   @Column({ default: 0 })
   score: number;
+
+  @OneToMany(() => FileUpload, (file) => file.user, { eager: true })
+  files: FileUpload[];
 }
