@@ -16,7 +16,6 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileUploadService } from './file-upload.service';
-import { UpdateFileDto } from './dto/file-upload.dto';
 import { Request, Response } from 'express';
 
 @Controller('files')
@@ -29,9 +28,10 @@ export class FileUploadController {
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB limit
+          new MaxFileSizeValidator({ maxSize: 30 * 1024 * 1024 }), // 10MB limit
           new FileTypeValidator({
-            fileType: /\.(jpg|jpeg|png|gif|pdf|doc|docx|txt)$/i,
+            fileType:
+              /^(image\/(jpeg|png|gif)|application\/(pdf|msword|vnd\.openxmlformats-officedocument\.wordprocessingml\.document)|text\/plain)$/i,
           }),
         ],
       }),
@@ -77,12 +77,6 @@ export class FileUploadController {
     });
 
     res.send(data);
-  }
-
-  @Put('update')
-  async updateFile(@Body() updateData: UpdateFileDto, @Req() req) {
-    const userId = parseInt(req.headers['user-id'] as string) || 1;
-    return await this.fileUploadService.updateFile(userId, updateData);
   }
 
   @Delete('delete')
