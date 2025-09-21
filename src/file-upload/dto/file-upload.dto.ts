@@ -2,22 +2,22 @@ import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateFileUploadDto {
   @IsString()
-  @IsNotEmpty()
-  originalName: string;
+  @IsOptional()
+  originalName?: string;
+
+  @IsString()
+  @IsOptional()
+  mimeType?: string;
+
+  @IsNumber()
+  @IsOptional()
+  fileSize?: any;
 
   @IsString()
   @IsNotEmpty()
-  mimeType: string;
+  taskTitle: string;
 
   @IsNumber()
   @IsNotEmpty()
-  fileSize: number;
-
-  @IsNumber()
-  @IsOptional()
-  taskId?: number;
-
-  @IsNumber()
-  @IsOptional()
-  userId?: number;
+  userId: number;
 }
