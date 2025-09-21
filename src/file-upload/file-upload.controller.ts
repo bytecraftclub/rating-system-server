@@ -2,33 +2,35 @@ import {
   Controller,
   Post,
   Get,
-  Put,
   Delete,
+  Param,
+  Body,
   UseInterceptors,
   UploadedFile,
-  Body,
-  Req,
-  Res,
   ParseFilePipe,
   MaxFileSizeValidator,
   FileTypeValidator,
   NotFoundException,
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileUploadService } from './file-upload.service';
-import { Request, Response } from 'express';
+import { CreateFileUploadDto } from './dto/file-upload.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @Controller('files')
 export class FileUploadController {
   constructor(private readonly fileUploadService: FileUploadService) {}
 
+  // ✅ Upload a file
   @Post('upload')
+  //@UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 30 * 1024 * 1024 }), // 10MB limit
+          new MaxFileSizeValidator({ maxSize: 30 * 1024 * 1024 }), // 30MB limit
           new FileTypeValidator({
             fileType:
               /^(image\/(jpeg|png|gif)|application\/(pdf|msword|vnd\.openxmlformats-officedocument\.wordprocessingml\.document)|text\/plain)$/i,
@@ -37,52 +39,31 @@ export class FileUploadController {
       }),
     )
     file,
-    @Req() req,
+    @Body() dto: any,
   ) {
-    // In a real app, you'd extract userId from JWT token or session
-    const userId = parseInt(req.headers['user-id'] as string) || 1;
-
-    return await this.fileUploadService.uploadFile(userId, file);
-  }
-
-  @Get('my-file')
-  async getMyFile(@Req() req) {
-    const userId = parseInt(req.headers['user-id'] as string) || 1;
-    const file = await this.fileUploadService.getUserFile(userId);
-
-    if (!file) {
-      throw new NotFoundException('No file found');
-    }
-
-    // Return file info without the binary data
-    return {
-      id: file.id,
-      originalName: file.originalName,
-      mimeType: file.mimeType,
-      fileSize: file.fileSize,
-      createdAt: file.createdAt,
-      updatedAt: file.updatedAt,
-    };
-  }
-
-  @Get('download')
-  async downloadFile(@Req() req, @Res() res) {
-    const userId = parseInt(req.headers['user-id'] as string) || 1;
-    const { data, file } = await this.fileUploadService.getFileData(userId);
-
-    res.set({
-      'Content-Type': file.mimeType,
-      'Content-Disposition': `attachment; filename="${file.originalName}"`,
-      'Content-Length': file.fileSize.toString(),
+    // add file properties into DTO
+    dto.originalName = file.originalname;
+    dto.mimeType = file.mimetype;
+    dto.fileSize = file.size;
+    console.log('Uploading file:', {
+      ...dto,
+      originalName: file.originalname,
+      mimeType: file.mimetype,
+      fileSize: file.size,
     });
 
-    res.send(data);
+    return await this.fileUploadService.uploadFile(file, dto);
   }
 
-  @Delete('delete')
-  async deleteFile(@Req() req) {
-    const userId = parseInt(req.headers['user-id'] as string) || 1;
-    await this.fileUploadService.deleteFile(userId);
-    return { message: 'File deleted successfully' };
+  // ✅ Get all files
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  async getAllFiles() {
+    return await this.fileUploadService.getAllFiles();
+  }
+
+  @Delete(':fileId')
+  async deleteFile(@Param('fileId') fileId: number) {
+    return this.fileUploadService.deleteFileById(fileId);
   }
 }
