@@ -7,6 +7,8 @@ import {
   UpdateDateColumn,
   ManyToMany,
   ManyToOne,
+  ForeignKey,
+  JoinColumn,
 } from 'typeorm';
 import { task } from './task.entity';
 
@@ -33,12 +35,14 @@ export class FileUpload {
   @UpdateDateColumn()
   updatedAt: Date;
 
+  @ManyToOne(() => User, (user) => user.files, { eager: false })
+  user: User;
+  @Column()
+  userId: number;
+
   @Column({ nullable: true })
   taskId: number;
 
   @ManyToOne(() => task, (task) => task.files, { eager: false })
   task: task;
-
-  @ManyToOne(() => User, (user) => user.files, { eager: false })
-  user: User;
 }
