@@ -63,16 +63,16 @@ export class AuthService {
 
   async login(user: User) {
     // This remains the same, now acting on your DB User entity
-    const payload = { email: user.email, sub: user.id };
+    const payload = { email: user.email, sub: user.googleId };
     return {
       access_token: this.jwtService.sign(payload),
-      user: { id: user.id, email: user.email, name: user.firstName }, // Sanitize user object for client
+      user: { id: user.googleId, email: user.email, name: user.firstName }, // Sanitize user object for client
     };
   }
 
   async login2(user: User): Promise<LoginResponse> {
     const payload = {
-      sub: user.id,
+      sub: user.googleId,
       email: user.email,
       name: user.firstName,
     };
@@ -80,7 +80,7 @@ export class AuthService {
     return {
       access_token: this.jwtService.sign(payload),
       user: {
-        id: user.id,
+        id: user.googleId,
         email: user.email,
         name: user.firstName,
         picture: user.avatar,
@@ -90,7 +90,7 @@ export class AuthService {
 
   async validateJwtPayload(payload: any): Promise<User> {
     const user = await this.userRepository.findOne({
-      where: { id: payload.sub },
+      where: { googleId: payload.sub },
     });
 
     if (!user || !user.isActive) {
@@ -101,7 +101,7 @@ export class AuthService {
   }
 
   async findUserById(id: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { id } });
+    return this.userRepository.findOne({ where: { googleId: id } });
   }
 
   async findUserByEmail(email: string): Promise<User | null> {
@@ -114,7 +114,7 @@ export class AuthService {
   async getAllUsers(): Promise<User[]> {
     return this.userRepository.find({
       select: [
-        'id',
+        'googleId',
         'email',
         'firstName',
         'lastName',
