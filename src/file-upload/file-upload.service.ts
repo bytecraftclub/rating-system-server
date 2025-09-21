@@ -1,144 +1,143 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, MoreThanOrEqual } from 'typeorm';
+import { Repository } from 'typeorm';
 import { FileUpload } from './entities/file-upload.entity';
-import { Multer } from 'multer';
-import { UpdateFileDto } from './dto/file-upload.dto';
+import { User } from 'src/user/entities/user.entity';
+import { task } from './entities/task.entity';
+import { CreateFileUploadDto } from './dto/file-upload.dto';
 
 @Injectable()
 export class FileUploadService {
   constructor(
     @InjectRepository(FileUpload)
-    private readonly fileUploadRepository: Repository<FileUpload>,
+    private readonly fileRepository: Repository<FileUpload>,
+
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+
+    @InjectRepository(task)
+    private readonly taskRepository: Repository<task>,
   ) {}
 
-  async canUserUpload(userId: number): Promise<boolean> {
-    const twentyFourHoursAgo = new Date();
-    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
-
-    const recentUpload = await this.fileUploadRepository.findOne({
-      where: {
-        userId,
-        createdAt: MoreThanOrEqual(twentyFourHoursAgo),
-      },
+  async uploadFile(
+    filesent: Buffer,
+    dto: CreateFileUploadDto,
+  ): Promise<string> {
+    const user = await this.userRepository.findOne({
+      where: { id: dto.userId },
     });
-
-    return !recentUpload;
-  }
-
-  async uploadFile(userId: number, file: Multer.File): Promise<FileUpload> {
-    // Check if user can upload (24-hour limit)
-    const canUpload = await this.canUserUpload(userId);
-    if (!canUpload) {
-      throw new ForbiddenException('You can only upload one file per 24 hours');
+    if (!user) {
+      throw new NotFoundException(`User with ID ${dto.userId} not found`);
     }
 
-    // Delete existing file if user has one
-    await this.deleteUserExistingFiles(userId);
+    // ⏳ Check 24-hour rule
+    if (user.lastfileupload) {
+      const twentyFourHoursAgo = new Date();
+      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
-    const fileUpload = this.fileUploadRepository.create({
-      userId,
-      originalName: file.originalname,
-      mimeType: file.mimetype,
-      fileSize: file.size,
-      fileData: file.buffer,
-    });
-
-    return await this.fileUploadRepository.save(fileUpload);
-  }
-
-  async getUserFile(userId: number): Promise<FileUpload | null> {
-    return await this.fileUploadRepository.findOne({
-      where: { userId },
-      order: { createdAt: 'DESC' },
-    });
-  }
-
-  async getUserFileWithData(userId: number): Promise<FileUpload | null> {
-    return await this.fileUploadRepository.findOne({
-      where: { userId },
-      order: { createdAt: 'DESC' },
-      select: [
-        'id',
-        'userId',
-        'originalName',
-        'mimeType',
-        'fileSize',
-        'fileData',
-        'createdAt',
-        'updatedAt',
-      ],
-    });
-  }
-
-  async updateFile(
-    userId: number,
-    updateData: UpdateFileDto,
-  ): Promise<FileUpload> {
-    const fileUpload = await this.getUserFile(userId);
-
-    if (!fileUpload) {
-      throw new NotFoundException('No file found for this user');
+      if (user.lastfileupload > twentyFourHoursAgo) {
+        throw new Error(
+          `You can only upload one file every 24 hours. Last upload was at ${user.lastfileupload.toISOString()}`,
+        );
+      }
     }
 
-    // Check if file is within 24 hours
-    const twentyFourHoursAgo = new Date();
-    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
-
-    if (fileUpload.createdAt < twentyFourHoursAgo) {
-      throw new ForbiddenException(
-        'File can only be edited within 24 hours of upload',
+    const task = await this.taskRepository.findOne({
+      where: { title: dto.taskTitle },
+    });
+    if (!task) {
+      throw new NotFoundException(
+        `Task with title "${dto.taskTitle}" not found`,
       );
     }
 
-    Object.assign(fileUpload, updateData);
-    return await this.fileUploadRepository.save(fileUpload);
-  }
-
-  async deleteFile(userId: number): Promise<void> {
-    const fileUpload = await this.getUserFile(userId);
-
-    if (!fileUpload) {
-      throw new NotFoundException('No file found for this user');
-    }
-
-    // Check if file is within 24 hours
-    const twentyFourHoursAgo = new Date();
-    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
-
-    if (fileUpload.createdAt < twentyFourHoursAgo) {
-      throw new ForbiddenException(
-        'File can only be deleted within 24 hours of upload',
-      );
-    }
-
-    await this.fileUploadRepository.remove(fileUpload);
-  }
-
-  private async deleteUserExistingFiles(userId: number): Promise<void> {
-    const existingFiles = await this.fileUploadRepository.find({
-      where: { userId },
+    const file = this.fileRepository.create({
+      originalName: dto.originalName,
+      mimeType: dto.mimeType,
+      fileSize: dto.fileSize,
+      fileData: filesent,
+      user,
+      task,
     });
 
-    if (existingFiles.length > 0) {
-      await this.fileUploadRepository.remove(existingFiles);
-    }
+    // ✅ Update user.lastfileupdate to now
+    user.lastfileupload = new Date();
+    await this.userRepository.save(user);
+    await this.fileRepository.save(file);
+
+    return 'file uploaded successfully';
   }
 
-  async getFileData(
-    userId: number,
-  ): Promise<{ data: Buffer; file: FileUpload }> {
-    const fileUpload = await this.getUserFileWithData(userId);
+  // ✅ Get all files
+  async getAllFiles(): Promise<FileUpload[]> {
+    return this.fileRepository.find({
+      relations: ['user', 'task'],
+    });
+  }
 
-    if (!fileUpload) {
-      throw new NotFoundException('No file found for this user');
+  // ✅ Get files by task title
+  async getFilesByTaskTitle(taskTitle: string): Promise<FileUpload[]> {
+    const task = await this.taskRepository.findOne({
+      where: { title: taskTitle },
+    });
+    if (!task) {
+      throw new NotFoundException(`Task with title "${taskTitle}" not found`);
     }
 
-    return { data: fileUpload.fileData, file: fileUpload };
+    return this.fileRepository.find({
+      where: { task: { id: task.id } },
+      relations: ['user', 'task'],
+    });
+  }
+
+  // ✅ Delete all files of a task & add points to user’s score
+  async deleteAllFilesByTaskTitleAndAddScore(taskTitle: string): Promise<void> {
+    const task = await this.taskRepository.findOne({
+      where: { title: taskTitle },
+    });
+    if (!task) {
+      throw new NotFoundException(`Task with title "${taskTitle}" not found`);
+    }
+
+    const files = await this.fileRepository.find({
+      where: { task: { id: task.id } },
+      relations: ['user'],
+    });
+
+    if (files.length === 0) {
+      throw new NotFoundException(`No files found for task "${taskTitle}"`);
+    }
+
+    for (const file of files) {
+      if (file.user) {
+        file.user.score += task.points; // ✅ add task points to user
+        await this.userRepository.save(file.user);
+      }
+    }
+
+    await this.fileRepository.remove(files);
+  }
+
+  async deleteFileById(fileid: number): Promise<{ message: string }> {
+    // Load file with relations
+    const file = await this.fileRepository.findOne({
+      where: { id: fileid },
+      relations: ['task', 'user'],
+    });
+
+    if (!file) {
+      throw new NotFoundException(`File with name "${fileid}" not found`);
+    }
+
+    // Add task points to user score
+    file.user.score += file.task.points;
+    await this.userRepository.save(file.user);
+
+    // Delete file
+    await this.fileRepository.remove(file);
+
+    return {
+      message: `File "${fileid}" deleted and ${file.task.points} points added to user.`,
+    };
   }
 }
