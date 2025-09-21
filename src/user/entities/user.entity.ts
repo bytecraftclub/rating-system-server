@@ -6,12 +6,14 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  BeforeInsert,
+  PrimaryColumn,
 } from 'typeorm';
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column({ unique: true })
   googleId: string;
@@ -34,6 +36,18 @@ export class User {
   @Column({ default: 0 })
   score: number;
 
+  @Column({ type: 'timestamp', nullable: true })
+  lastfileupload: Date;
+
   @OneToMany(() => FileUpload, (file) => file.user, { eager: true })
   files: FileUpload[];
+
+  @BeforeInsert()
+  setDefaultLastFileUpload() {
+    if (!this.lastfileupload) {
+      const twoDaysAgo = new Date();
+      twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+      this.lastfileupload = twoDaysAgo;
+    }
+  }
 }
