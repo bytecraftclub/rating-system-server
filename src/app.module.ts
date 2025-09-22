@@ -8,6 +8,7 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { FileUploadModule } from './file-upload/file-upload.module';
+import { GoogleDriveModule } from './google-drive/google-drive.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { FileUploadModule } from './file-upload/file-upload.module';
     UserModule,
     AuthModule,
     FileUploadModule,
+    GoogleDriveModule,
   ],
   controllers: [AppController],
   providers: [AppService],
