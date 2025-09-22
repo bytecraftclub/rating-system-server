@@ -20,4 +20,8 @@ export class CreateFileUploadDto {
   @IsNumber()
   @IsNotEmpty()
   userId: number;
+
+  @IsString()
+  @IsOptional()
+  fileUrl?: string;
 }
