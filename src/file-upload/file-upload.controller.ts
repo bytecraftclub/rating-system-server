@@ -17,10 +17,14 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { FileUploadService } from './file-upload.service';
 import { CreateFileUploadDto } from './dto/file-upload.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { GoogleDriveService } from '../google-drive/google-drive.service';
 
 @Controller('files')
 export class FileUploadController {
-  constructor(private readonly fileUploadService: FileUploadService) {}
+  constructor(
+    private readonly fileUploadService: FileUploadService,
+    private readonly driveService: GoogleDriveService,
+  ) {}
 
   // ✅ Upload a file
   @Post('upload')
@@ -41,10 +45,12 @@ export class FileUploadController {
     file,
     @Body() dto: any,
   ) {
+    const url = await this.driveService.uploadFile(file);
     // add file properties into DTO
     dto.originalName = file.originalname;
     dto.mimeType = file.mimetype;
     dto.fileSize = file.size;
+    dto.fileUrl = url;
     console.log('Uploading file:', {
       ...dto,
       originalName: file.originalname,
@@ -52,13 +58,14 @@ export class FileUploadController {
       fileSize: file.size,
     });
 
-    return await this.fileUploadService.uploadFile(file, dto);
+    return await this.fileUploadService.uploadFile(dto);
   }
 
   // ✅ Get all files
-  @Get()
-  @UseGuards(JwtAuthGuard)
+  @Get('allFiles')
+  // @UseGuards(JwtAuthGuard)
   async getAllFiles() {
+    console.log('Fetching all files...');
     return await this.fileUploadService.getAllFiles();
   }
 
