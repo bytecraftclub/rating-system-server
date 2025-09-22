@@ -19,10 +19,7 @@ export class FileUploadService {
     private readonly taskRepository: Repository<task>,
   ) {}
 
-  async uploadFile(
-    filesent: Buffer,
-    dto: CreateFileUploadDto,
-  ): Promise<string> {
+  async uploadFile(dto: CreateFileUploadDto): Promise<string> {
     const user = await this.userRepository.findOne({
       where: { id: dto.userId },
     });
@@ -55,7 +52,7 @@ export class FileUploadService {
       originalName: dto.originalName,
       mimeType: dto.mimeType,
       fileSize: dto.fileSize,
-      fileData: filesent,
+      fileData: dto.fileUrl,
       user,
       task,
     });
