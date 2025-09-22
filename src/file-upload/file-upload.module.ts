@@ -6,6 +6,9 @@ import { FileUpload } from './entities/file-upload.entity';
 import { UserModule } from 'src/user/user.module';
 import { User } from 'src/user/entities/user.entity';
 import { task } from './entities/task.entity';
+import { GoogleDriveService } from '../google-drive/google-drive.service';
+import { google } from 'googleapis';
+import { GoogleDriveModule } from 'src/google-drive/google-drive.module';
 
 @Module({
   imports: [
@@ -13,6 +16,7 @@ import { task } from './entities/task.entity';
     TypeOrmModule.forFeature([User]),
     TypeOrmModule.forFeature([task]),
     UserModule,
+    GoogleDriveModule,
   ],
   controllers: [FileUploadController],
   providers: [FileUploadService],
