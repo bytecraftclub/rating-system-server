@@ -5,6 +5,7 @@ import { FileUpload } from './entities/file-upload.entity';
 import { User } from 'src/user/entities/user.entity';
 import { task } from './entities/task.entity';
 import { CreateFileUploadDto } from './dto/file-upload.dto';
+import { GoogleDriveService } from 'src/google-drive/google-drive.service';
 
 @Injectable()
 export class FileUploadService {
@@ -17,6 +18,8 @@ export class FileUploadService {
 
     @InjectRepository(task)
     private readonly taskRepository: Repository<task>,
+
+    private readonly googleDriveService: GoogleDriveService,
   ) {}
 
   async uploadFile(dto: CreateFileUploadDto): Promise<string> {
@@ -136,5 +139,47 @@ export class FileUploadService {
     return {
       message: `File "${fileid}" deleted and ${file.task.points} points added to user.`,
     };
+  }
+
+  async acceptFile(fileId: number): Promise<string> {
+    const file = await this.fileRepository.findOne({
+      where: { id: fileId },
+      relations: ['user', 'task'],
+    });
+
+    if (!file) throw new NotFoundException(`File with ID ${fileId} not found`);
+
+    if (file.task) {
+      file.user.score += file.task.points;
+      await this.userRepository.save(file.user);
+    }
+
+    // Delete from Google Drive (use driveFileId instead of name ideally)
+    try {
+      await this.googleDriveService.deleteFile(file.fileData);
+    } catch (err) {
+      console.error('Failed to delete from Google Drive:', err.message);
+    }
+
+    await this.fileRepository.remove(file);
+    return `✅ File ${fileId} accepted, points added, and deleted successfully`;
+  }
+
+  // ❌ Refuse file: only delete without adding points
+  async refuseFile(fileId: number): Promise<string> {
+    const file = await this.fileRepository.findOne({
+      where: { id: fileId },
+    });
+
+    if (!file) throw new NotFoundException(`File with ID ${fileId} not found`);
+
+    try {
+      await this.googleDriveService.deleteFile(file.fileData);
+    } catch (err) {
+      console.error('Failed to delete from Google Drive:', err.message);
+    }
+
+    await this.fileRepository.remove(file);
+    return `❌ File ${fileId} refused and deleted successfully`;
   }
 }
