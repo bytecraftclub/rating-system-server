@@ -12,6 +12,8 @@ import {
   FileTypeValidator,
   NotFoundException,
   UseGuards,
+  Patch,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileUploadService } from './file-upload.service';
@@ -67,6 +69,17 @@ export class FileUploadController {
   async getAllFiles() {
     console.log('Fetching all files...');
     return await this.fileUploadService.getAllFiles();
+  }
+
+  @Patch(':id/accept')
+  async acceptFile(@Param('id', ParseIntPipe) id: number) {
+    return await this.fileUploadService.acceptFile(id);
+  }
+
+  // ❌ Refuse file: only delete file without adding points
+  @Delete(':id/refuse')
+  async refuseFile(@Param('id', ParseIntPipe) id: number) {
+    return await this.fileUploadService.refuseFile(id);
   }
 
   @Delete(':fileId')
