@@ -26,7 +26,7 @@ export class FileUpload {
   @Column()
   fileSize: number;
 
-  @Column({ type: 'bytea' })
+  @Column()
   fileData: string;
 
   @CreateDateColumn()
