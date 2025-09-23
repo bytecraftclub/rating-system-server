@@ -1,18 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { google } from 'googleapis';
 import { Readable } from 'stream';
-import * as path from 'path';
 
 @Injectable()
 export class GoogleDriveService {
   private drive;
 
   constructor() {
+    const credentials = process.env.GOOGLE_DRIVE_KEY
+      ? JSON.parse(process.env.GOOGLE_DRIVE_KEY)
+      : null;
+
+    if (!credentials) {
+      throw new Error(
+        'Google Drive credentials not found in environment variables',
+      );
+    }
+
     const auth = new google.auth.GoogleAuth({
-      keyFile: path.join(
-        __dirname,
-        '../../src/config/neat-airport-469410-k0-c08723aacab2.json',
-      ),
+      credentials,
       scopes: ['https://www.googleapis.com/auth/drive'],
     });
 
@@ -20,12 +26,11 @@ export class GoogleDriveService {
   }
 
   async uploadFile(file): Promise<string> {
-    // ✅ Upload to the shared folder
     const res = await this.drive.files.create({
       requestBody: {
         name: file.originalname,
         mimeType: file.mimetype,
-        parents: ['0AObSY20y_EdAUk9PVA'],
+        parents: ['0AObSY20y_EdAUk9PVA'], // Shared folder ID
       },
       media: {
         mimeType: file.mimetype,
@@ -38,19 +43,13 @@ export class GoogleDriveService {
     const fileId = res.data.id;
     console.log(`Uploaded file: ${res.data.name} (${fileId})`);
 
-    // ✅ Make file public
-    // await this.drive.permissions.create({
-    //   fileId,
-    //   requestBody: { role: 'reader', type: 'anyone' },
-    // });
-
-    // ✅ Return public URL
+    // Return direct download link
     return `https://drive.google.com/uc?id=${fileId}`;
   }
 
   async deleteFile(fileIdOrUrl: string): Promise<void> {
     try {
-      // Extract ID if it's a full URL
+      // Extract file ID if input is a URL
       const fileIdMatch = fileIdOrUrl.match(/[-\w]{25,}/);
       const fileId = fileIdMatch ? fileIdMatch[0] : fileIdOrUrl;
 
