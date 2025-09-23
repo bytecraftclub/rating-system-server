@@ -47,4 +47,22 @@ export class GoogleDriveService {
     // ✅ Return public URL
     return `https://drive.google.com/uc?id=${fileId}`;
   }
+
+  async deleteFile(fileIdOrUrl: string): Promise<void> {
+    try {
+      // Extract ID if it's a full URL
+      const fileIdMatch = fileIdOrUrl.match(/[-\w]{25,}/);
+      const fileId = fileIdMatch ? fileIdMatch[0] : fileIdOrUrl;
+
+      await this.drive.files.delete({
+        fileId,
+        supportsAllDrives: true,
+      });
+
+      console.log(`Deleted file ${fileId} from Google Drive`);
+    } catch (error) {
+      console.error(`Failed to delete file ${fileIdOrUrl}:`, error.message);
+      throw new Error('Google Drive file deletion failed');
+    }
+  }
 }
