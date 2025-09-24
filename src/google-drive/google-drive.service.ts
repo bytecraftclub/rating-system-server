@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { google } from 'googleapis';
 import { Readable } from 'stream';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 @Injectable()
 export class GoogleDriveService {
