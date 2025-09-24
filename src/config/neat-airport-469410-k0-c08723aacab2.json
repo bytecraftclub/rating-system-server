@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "neat-airport-469410-k0",
+  "private_key_id": "c08723aacab2693614d55c8e39e0e811cec50000",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDNYf1BxpIpsF3X\nmkhEQs6/P5/KwS3lQjZvElttGFRG5SnyDFZl44bYPmBx8mrbSWWEiH5/IS6dnyqK\nBx/NCP4bci2SjcEbiV+zTgE6SxhXs4NzReTJGgBj83J0TWrL0mbLsU3Kh8TRlx+w\ni8/Wvrs7G+8ewsAR8o87uZYC5HFPYxZcNq6t/Aw700da5LVMCYHwgx7s5kNy/xZg\nWrJcpw4GcB5txOYCMt+DPysL1YwGvibcykbyEFuiLby8mHzh7TfPvUar0BwK3qFy\nGmMO+IGWz5IXWIw2V9kclat2yEuHSKbFh/L8EUTE9iXJBbWbzYa8uWcIbWjv5GsI\nGfENVBq3AgMBAAECggEAFwuVY58Itt16T39D9/ItyVngmoXomh6UMGG1Q92EqgZ8\nGWkhp1cgwfzlzNiwUstpNQuCc3i2sVWzFpUhZVv1SgEayfoBSWS1tKSJELsXunzY\nasPUncK+znhPnGs0vjVtTBJ+BxQK6qBJcaw5IFXQeRvI+KujlPVMSx2njnWG8qru\nfQhJh9GqSLLB01zIAGoo4c8tI6wAm3Mq2UAaU9P/RPLEEW54bl4BATOSxhCTvlW2\notjsrUdHGzgxw7YuaCyOXAdUy63tsg0DfeuENooD6NSkdPeQmEYPN/mxjxponIMS\nQZ9gYnsLYJMHUSnTs4N3Ybo4mA8ADauTmIPcwkbrYQKBgQDtE74WGKH4vN9VQKek\nNPYjKTMlmWD+hm1y6Urnirb//ody08HIjPiCM+1jOOY2JgTEg0hxxTKq74E3huMw\nOzv6dAEr9JvMgitd+1+VUExd7khh+5qzDHVz7gzUomL8kSyhql1YMPyz4N/HlDs2\n1LA6D56ZuNGtxu5+Om+yBvrpcQKBgQDdxqDF+azDlqK4q1Dxk/ROnXFEpIk9YJJ8\nonCY9ZMRKnn9LwyZuKIXziITnKZf/+9kHf4zI4+djpMMug5Mpn8RW60JYOzZw4gx\nbuWGkwtY/xxla4UGtzZSoxcNmM8x6zli+LEJ92S1nrEaHiVuLATFm7lN1EgSlfi/\nRua3ugnypwKBgQDAkWW4av+9nCTICcFh1wcLHl8GLmSjuatTSH3oPztQCn4Y3jos\nXZ1JnUY4bzJHT3BV8tE4YFY8lFhgMvd86NBaKjn9ay3V2vHA3/sOvG+baH5w4D8T\nKo6IwRa47MH8pysakdhKV1gcAA+k/Blw+ye9sYxBDud6APkdnPe3IoZScQKBgDQf\nmevN2aACiG4Uvap5lqLfeB6k+Sh2yRcH6qTYmt8e95rc8v4yGc60gOfRGn1XnsEO\nF4+XXQqv1rnYBMJZI2ZGAK5CnIg1342WvdVaPAGHu/nOQm6ootjbQfDNKG1YFp2/\nS4THI2FYUdGMokl5iQmUpwG20dWkb9ks5c7qp6njAoGBANwKUQsWTdDVVIcgN6dF\n151NWXXTW8R00ninHsno1eAxsL1Cgj4PLh0jKcc3jqAZv7voG7aJg8kjxRr10O8U\n04ecAkw5nUHL1NgdGHLXU9Ppjzyqd3Cw4RSTwGrwl/edgrehq9/pinSTusLzNkMl\nIMCu3GfUYVn2aIse1cEgaoIW\n-----END PRIVATE KEY-----\n",
+  "client_email": "drive-uploader@neat-airport-469410-k0.iam.gserviceaccount.com",
+  "client_id": "103349477794795679465",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/drive-uploader%40neat-airport-469410-k0.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
