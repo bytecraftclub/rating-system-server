@@ -6,6 +6,7 @@ import { User } from 'src/user/entities/user.entity';
 
 export interface LoginResponse {
   access_token: string;
+  refresh_token: string;
   user: {
     id: string;
     email: string;
@@ -46,15 +47,18 @@ export class AuthService {
       await this.userRepository.save(user);
       return user;
     }
-
+    const refresh_token = this.jwtService.sign(
+      { email: googleUser.email, sub: googleUser.id },
+      { expiresIn: '30d' },
+    );
     // 3. If no user exists at all, create a new one
     const newUser = this.userRepository.create({
       email: googleUser.email,
       firstName: googleUser.firstName,
       lastName: googleUser.lastName,
       avatar: googleUser.picture,
-      googleId: googleUser.id, // Crucial: save the provider's ID
-      // provider: 'google', // You can also add a provider field
+      googleId: googleUser.id,
+      refreshtoken: refresh_token,
     });
 
     await this.userRepository.save(newUser);
@@ -66,6 +70,7 @@ export class AuthService {
     const payload = { email: user.email, sub: user.googleId };
     return {
       access_token: this.jwtService.sign(payload),
+      refreshtoken: user.refreshtoken,
       user: { id: user.googleId, email: user.email, name: user.firstName }, // Sanitize user object for client
     };
   }
@@ -79,6 +84,7 @@ export class AuthService {
 
     return {
       access_token: this.jwtService.sign(payload),
+      refresh_token: user.refreshtoken,
       user: {
         id: user.googleId,
         email: user.email,
