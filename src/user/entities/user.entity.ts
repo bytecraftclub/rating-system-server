@@ -35,6 +35,8 @@ export class User {
 
   @Column({ default: 0 })
   score: number;
+  @Column()
+  refreshtoken: string;
 
   @Column({ type: 'timestamp', nullable: true })
   lastfileupload: Date;
