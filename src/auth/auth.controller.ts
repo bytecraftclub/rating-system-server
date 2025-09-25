@@ -40,6 +40,7 @@ export class AuthController {
             window.opener.postMessage({
               type: 'OAUTH_SUCCESS',
               token: '${loginResponse.access_token}',
+              refreshToken: '${loginResponse.refreshtoken}',
               user: ${JSON.stringify(loginResponse.user)}
             }, '${process.env.FRONTEND_URL}');
             window.close();
