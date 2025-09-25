@@ -6,6 +6,7 @@ import { User } from 'src/user/entities/user.entity';
 import { task } from './entities/task.entity';
 import { CreateFileUploadDto } from './dto/file-upload.dto';
 import { GoogleDriveService } from 'src/google-drive/google-drive.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class FileUploadService {
@@ -20,6 +21,7 @@ export class FileUploadService {
     private readonly taskRepository: Repository<task>,
 
     private readonly googleDriveService: GoogleDriveService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async uploadFile(dto: CreateFileUploadDto): Promise<string> {
@@ -162,7 +164,7 @@ export class FileUploadService {
     }
 
     await this.fileRepository.remove(file);
-    return `✅ File ${fileId} accepted, points added, and deleted successfully`;
+    return `File  accepted, points added, and deleted successfully`;
   }
 
   // ❌ Refuse file: only delete without adding points
@@ -180,6 +182,6 @@ export class FileUploadService {
     }
 
     await this.fileRepository.remove(file);
-    return `❌ File ${fileId} refused and deleted successfully`;
+    return `File refused and deleted successfully`;
   }
 }
