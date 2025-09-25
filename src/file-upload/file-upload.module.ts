@@ -9,6 +9,7 @@ import { task } from './entities/task.entity';
 import { GoogleDriveService } from '../google-drive/google-drive.service';
 import { google } from 'googleapis';
 import { GoogleDriveModule } from 'src/google-drive/google-drive.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { GoogleDriveModule } from 'src/google-drive/google-drive.module';
     TypeOrmModule.forFeature([task]),
     UserModule,
     GoogleDriveModule,
+    JwtModule,
   ],
   controllers: [FileUploadController],
   providers: [FileUploadService],
