@@ -35,7 +35,7 @@ export class User {
 
   @Column({ default: 0 })
   score: number;
-  @Column()
+  @Column({ nullable: true })
   refreshtoken: string;
 
   @Column({ type: 'timestamp', nullable: true })
