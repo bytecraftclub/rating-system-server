@@ -12,7 +12,7 @@ export class Notification {
   @Column()
   read: boolean;
 
-  @Column()
+  @Column({ nullable: true })
   createdAt: Date;
 
   @ManyToOne(() => User, (user) => user.notifications, { eager: false })

@@ -51,6 +51,7 @@ export class AuthController {
                   refreshToken: '${loginResponse.refresh_token || ''}',
                   expiresAt: ${loginResponse.expires_at || 'null'},
                   user: ${JSON.stringify(loginResponse.user)}
+                  
                 };
                 window.opener.postMessage(message, '${process.env.FRONTEND_URL}');
               } catch (e) {
@@ -63,9 +64,7 @@ export class AuthController {
             }, 1000);
           </script>
           <div style="text-align: center; font-family: Arial, sans-serif; margin-top: 50px;">
-            <h2>🎉 Authentication Successful!</h2>
-            <p>Redirecting back to the application...</p>
-            <p><small>This window will close automatically.</small></p>
+           
           </div>
         </body>
       </html>

@@ -12,6 +12,7 @@ export interface LoginResponse {
     email: string;
     name: string;
     picture?: string;
+    role?: string;
   };
 }
 
@@ -52,7 +53,6 @@ export class AuthService {
         user.refreshtoken = newRefreshToken;
 
         await this.userRepository.save(user);
-        console.log('Updated existing user');
         return user;
       }
 
@@ -95,6 +95,7 @@ export class AuthService {
         avatar: googleUser.picture,
         googleId: googleUser.id,
         refreshtoken: refreshToken,
+        role: 'user',
       });
 
       console.log('New user object before save:', newUser);
@@ -149,6 +150,7 @@ export class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
         avatar: user.avatar,
+        role: user.role,
       },
     };
   }
@@ -185,6 +187,7 @@ export class AuthService {
         profile.displayName?.split(' ').slice(1).join(' ') ||
         'User',
       picture: profile.photos?.[0]?.value || null,
+      role: profile.role,
     };
 
     if (!googleUser.email) {
@@ -293,6 +296,7 @@ export class AuthService {
           firstName: user.firstName,
           lastName: user.lastName,
           avatar: user.avatar,
+          role: user.role,
         },
       };
     } catch (error) {
