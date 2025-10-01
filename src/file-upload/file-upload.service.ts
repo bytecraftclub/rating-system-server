@@ -7,6 +7,7 @@ import { task } from './entities/task.entity';
 import { CreateFileUploadDto } from './dto/file-upload.dto';
 import { GoogleDriveService } from 'src/google-drive/google-drive.service';
 import { JwtService } from '@nestjs/jwt';
+import { NotificationsService } from 'src/notifications/notifications.service';
 
 @Injectable()
 export class FileUploadService {
@@ -22,6 +23,7 @@ export class FileUploadService {
 
     private readonly googleDriveService: GoogleDriveService,
     private readonly jwtService: JwtService,
+    private readonly notificationService: NotificationsService,
   ) {}
 
   async uploadFile(dto: CreateFileUploadDto): Promise<string> {
@@ -133,6 +135,11 @@ export class FileUploadService {
 
     // Add task points to user score
     file.user.score += file.task.points;
+    this.notificationService.createNotification(
+      file.task.title,
+      true,
+      file.user.id,
+    );
     await this.userRepository.save(file.user);
 
     // Delete file
@@ -162,7 +169,11 @@ export class FileUploadService {
     } catch (err) {
       console.error('Failed to delete from Google Drive:', err.message);
     }
-
+    await this.notificationService.createNotification(
+      file.task.title,
+      false,
+      file.user.id,
+    );
     await this.fileRepository.remove(file);
     return `File  accepted, points added, and deleted successfully`;
   }

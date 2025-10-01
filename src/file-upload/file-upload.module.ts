@@ -10,6 +10,7 @@ import { GoogleDriveService } from '../google-drive/google-drive.service';
 import { google } from 'googleapis';
 import { GoogleDriveModule } from 'src/google-drive/google-drive.module';
 import { JwtModule } from '@nestjs/jwt';
+import { NotificationsModule } from 'src/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { JwtModule } from '@nestjs/jwt';
     UserModule,
     GoogleDriveModule,
     JwtModule,
+    NotificationsModule,
   ],
   controllers: [FileUploadController],
   providers: [FileUploadService],

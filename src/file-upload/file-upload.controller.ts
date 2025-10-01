@@ -36,10 +36,9 @@ export class FileUploadController {
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 30 * 1024 * 1024 }), // 30MB limit
+          new MaxFileSizeValidator({ maxSize: 50 * 1024 * 1024 }),
           new FileTypeValidator({
-            fileType:
-              /^(image\/(jpeg|png|gif)|application\/(pdf|msword|vnd\.openxmlformats-officedocument\.wordprocessingml\.document)|text\/plain)$/i,
+            fileType: /^(image\/(jpeg|png|gif)|application\/pdf|text\/plain)$/i,
           }),
         ],
       }),
@@ -48,7 +47,6 @@ export class FileUploadController {
     @Body() dto: any,
   ) {
     const url = await this.driveService.uploadFile(file);
-    // add file properties into DTO
     dto.originalName = file.originalname;
     dto.mimeType = file.mimetype;
     dto.fileSize = file.size;
