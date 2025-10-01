@@ -9,6 +9,7 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { FileUploadModule } from './file-upload/file-upload.module';
 import { GoogleDriveModule } from './google-drive/google-drive.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { GoogleDriveModule } from './google-drive/google-drive.module';
     AuthModule,
     FileUploadModule,
     GoogleDriveModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
