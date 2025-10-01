@@ -94,7 +94,7 @@ export class AuthService {
         lastName: googleUser.lastName,
         avatar: googleUser.picture,
         googleId: googleUser.id,
-        refreshtoken: refreshToken, // Make sure this matches your entity property name
+        refreshtoken: refreshToken,
       });
 
       console.log('New user object before save:', newUser);
@@ -105,17 +105,14 @@ export class AuthService {
     } catch (error) {
       console.error('Error in findOrCreateUser:', error);
 
-      // Handle unique constraint violations
       if (error.code === '23505' || error.message.includes('duplicate key')) {
         console.log('Duplicate key error, trying to find existing user again');
 
-        // Try to find the user again (race condition handling)
         const existingUser = await this.userRepository.findOneBy({
           email: googleUser.email,
         });
 
         if (existingUser) {
-          // Link Google ID if not already linked
           if (!existingUser.googleId) {
             existingUser.googleId = googleUser.id;
             await this.userRepository.save(existingUser);
@@ -134,18 +131,16 @@ export class AuthService {
     // Create JWT payload
     const payload = {
       email: user.email,
-      sub: user.googleId || user.id, // Use googleId if available, otherwise user.id
+      sub: user.googleId || user.id,
     };
 
-    // Generate access token (short-lived)
     const accessToken = this.jwtService.sign(payload, { expiresIn: '1h' });
 
-    // Calculate expiry time
-    const expiresAt = Date.now() + 60 * 60 * 1000; // 1 hour from now
+    const expiresAt = Date.now() + 60 * 60 * 1000;
 
     return {
       access_token: accessToken,
-      refresh_token: user.refreshtoken, // Changed from refreshtoken to refresh_token for consistency
+      refresh_token: user.refreshtoken,
       expires_at: expiresAt,
       user: {
         id: user.googleId || user.id,
@@ -177,8 +172,6 @@ export class AuthService {
     };
   }
   async validateGoogleUser(profile: any) {
-    console.log('🔍 validateGoogleUser called with profile:', profile.id);
-
     // Transform Google profile to our expected format
     const googleUser = {
       id: profile.id,
@@ -193,8 +186,6 @@ export class AuthService {
         'User',
       picture: profile.photos?.[0]?.value || null,
     };
-
-    console.log('🔄 Transformed Google user:', googleUser);
 
     if (!googleUser.email) {
       throw new Error('No email provided by Google');
@@ -242,13 +233,10 @@ export class AuthService {
   }
 
   async refreshAccessToken(refreshToken: string) {
-    console.log('🔄 Refreshing access token...');
-
     try {
       // 1. Verify the refresh token
-      console.log('🔍 Verifying refresh token...');
+
       const decoded = this.jwtService.verify(refreshToken);
-      console.log('✅ Refresh token verified for user:', decoded.sub);
 
       // 2. Find the user by the token's subject (Google ID)
       const user = await this.userRepository.findOne({
@@ -262,13 +250,11 @@ export class AuthService {
 
       // 3. Check if the stored refresh token matches
       if (user.refreshtoken !== refreshToken) {
-        console.log('❌ Refresh token mismatch');
         throw new Error('Invalid refresh token');
       }
 
       // 4. Check if user is still active
       if (!user.isActive) {
-        console.log('❌ User account is inactive');
         throw new Error('User account is inactive');
       }
 
@@ -323,8 +309,6 @@ export class AuthService {
   }
 
   async revokeRefreshToken(userId: string) {
-    console.log('🚫 Revoking refresh token for user:', userId);
-
     const user = await this.userRepository.findOne({
       where: { googleId: userId },
     });
@@ -337,14 +321,6 @@ export class AuthService {
   }
 
   async revokeAllUserTokens(userId: string) {
-    console.log('🚫 Revoking all tokens for user:', userId);
-
-    // In a more sophisticated setup, you might:
-    // 1. Maintain a blacklist of tokens
-    // 2. Use token versioning
-    // 3. Store tokens in Redis with TTL
-
-    // For now, just revoke the refresh token
     await this.revokeRefreshToken(userId);
   }
 }
