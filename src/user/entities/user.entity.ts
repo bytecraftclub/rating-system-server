@@ -1,4 +1,5 @@
 import { FileUpload } from 'src/file-upload/entities/file-upload.entity';
+import { Notification } from 'src/notifications/entities/notification.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -37,12 +38,19 @@ export class User {
   score: number;
   @Column({ nullable: true })
   refreshtoken: string;
+  @Column({ default: 'user' })
+  role: string;
 
   @Column({ type: 'timestamp', nullable: true })
   lastfileupload: Date;
 
   @OneToMany(() => FileUpload, (file) => file.user, { eager: true })
   files: FileUpload[];
+
+  @OneToMany(() => Notification, (notification) => notification.user, {
+    eager: true,
+  })
+  notifications: Notification[];
 
   @BeforeInsert()
   setDefaultLastFileUpload() {
