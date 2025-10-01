@@ -2,17 +2,20 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, VerifyCallback } from 'passport-google-oauth20';
 import { AuthService } from '../auth.service';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   private readonly logger = new Logger(GoogleStrategy.name);
+  private readonly frontendUrl = process.env.FRONTEND_URL;
 
   constructor(private authService: AuthService) {
     const clientID = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
     const callbackURL =
       process.env.GOOGLE_CALLBACK_URL ||
-      'http://localhost:3009/auth/google/callback';
+      `${process.env.FRONTEND_URL}/google/callback`;
 
     if (!clientID || !clientSecret) {
       const errorMsg =
@@ -37,9 +40,9 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   ): Promise<any> {
     try {
       const user = await this.authService.validateGoogleUser(profile);
-
       done(null, user);
     } catch (error) {
+      this.logger.error('Google validation failed', error);
       done(error, false);
     }
   }
