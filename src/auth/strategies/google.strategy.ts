@@ -8,14 +8,13 @@ dotenv.config();
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   private readonly logger = new Logger(GoogleStrategy.name);
-  private readonly frontendUrl = process.env.FRONTEND_URL;
 
   constructor(private authService: AuthService) {
     const clientID = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
     const callbackURL =
       process.env.GOOGLE_CALLBACK_URL ||
-      `${process.env.FRONTEND_URL}/google/callback`;
+      `${process.env.BACKEND_URL}/google/callback`;
 
     if (!clientID || !clientSecret) {
       const errorMsg =
