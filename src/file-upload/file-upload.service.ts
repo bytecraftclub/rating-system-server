@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { FileUpload } from './entities/file-upload.entity';
@@ -26,7 +30,8 @@ export class FileUploadService {
     private readonly notificationService: NotificationsService,
   ) {}
 
-  async uploadFile(dto: CreateFileUploadDto): Promise<string> {
+  async uploadFile(dto: CreateFileUploadDto): Promise<{ message: string }> {
+    // Find user
     const user = await this.userRepository.findOne({
       where: { id: dto.userId },
     });
@@ -34,18 +39,20 @@ export class FileUploadService {
       throw new NotFoundException(`User with ID ${dto.userId} not found`);
     }
 
-    // ⏳ Check 24-hour rule
+    // Check 24-hour rule
     if (user.lastfileupload) {
       const twentyFourHoursAgo = new Date();
       twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
       if (user.lastfileupload > twentyFourHoursAgo) {
-        throw new Error(
-          `You can only upload one file every 24 hours. Last upload was at ${user.lastfileupload.toISOString()}`,
+        const timeRemaining = this.getTimeRemaining(user.lastfileupload);
+        throw new BadRequestException(
+          `You can only upload one file every 24 hours. Please wait ${timeRemaining} before uploading again.`,
         );
       }
     }
 
+    // Find task
     const task = await this.taskRepository.findOne({
       where: { title: dto.taskTitle },
     });
@@ -55,6 +62,7 @@ export class FileUploadService {
       );
     }
 
+    // Create file record
     const file = this.fileRepository.create({
       originalName: dto.originalName,
       mimeType: dto.mimeType,
@@ -64,12 +72,26 @@ export class FileUploadService {
       task,
     });
 
-    // ✅ Update user.lastfileupdate to now
+    // Update user's last upload timestamp
     user.lastfileupload = new Date();
+
+    // Save both entities
     await this.userRepository.save(user);
     await this.fileRepository.save(file);
 
-    return 'file uploaded successfully';
+    return { message: 'File uploaded successfully' };
+  }
+
+  private getTimeRemaining(lastUpload: Date): string {
+    const now = new Date();
+    const nextAllowedUpload = new Date(lastUpload);
+    nextAllowedUpload.setHours(nextAllowedUpload.getHours() + 24);
+
+    const diff = nextAllowedUpload.getTime() - now.getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+    return `${hours}h ${minutes}m`;
   }
 
   // ✅ Get all files
