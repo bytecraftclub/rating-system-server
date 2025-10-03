@@ -18,12 +18,15 @@ export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @Post('notification')
-  create(@Body() createNotificationDto: CreateNotificationDto) {
-    const { taskName, approved, userId } = createNotificationDto;
+  create(@Body() body: any) {
+    const { taskName, approved, userId } = body;
+
+    const isApproved = approved === true || approved === 'true';
+
     return this.notificationsService.createNotification(
       taskName,
-      approved,
-      userId,
+      isApproved,
+      Number(userId),
     );
   }
 
