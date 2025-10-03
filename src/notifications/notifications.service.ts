@@ -23,7 +23,9 @@ export class NotificationsService {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    const message = `Task "${taskName}" has been ${approved ? 'approved ✅' : 'rejected ❌'}`;
+    const message = approved
+      ? `🎉 Congratulations! Your task "${taskName}" has been approved and completed successfully!`
+      : `⚠️ Update: Your task "${taskName}" requires revision. Please review the feedback and resubmit.`;
 
     const notification = this.notificationRepo.create({
       message,
