@@ -72,14 +72,6 @@ export class FileUploadController {
         fileUrl: url,
       };
 
-      console.log('Uploading file:', {
-        userId: dto.userId,
-        taskTitle: dto.taskTitle,
-        originalName: dto.originalName,
-        mimeType: dto.mimeType,
-        fileSize: dto.fileSize,
-      });
-
       return await this.fileUploadService.uploadFile(dto);
     } catch (error) {
       console.error('File upload error:', error);
