@@ -14,6 +14,7 @@ import {
   UseGuards,
   Patch,
   ParseIntPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileUploadService } from './file-upload.service';
@@ -30,13 +31,13 @@ export class FileUploadController {
 
   // ✅ Upload a file
   @Post('upload')
-  //@UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard) // Uncomment when ready
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 50 * 1024 * 1024 }),
+          new MaxFileSizeValidator({ maxSize: 50 * 1024 * 1024 }), // 50MB
           new FileTypeValidator({
             fileType: /^(image\/(jpeg|png|gif)|application\/pdf|text\/plain)$/i,
           }),
@@ -44,21 +45,46 @@ export class FileUploadController {
       }),
     )
     file,
-    @Body() dto: any,
+    @Body() body: { userId?: string; taskTitle?: string },
   ) {
-    const url = await this.driveService.uploadFile(file);
-    dto.originalName = file.originalname;
-    dto.mimeType = file.mimetype;
-    dto.fileSize = file.size;
-    dto.fileUrl = url;
-    console.log('Uploading file:', {
-      ...dto,
-      originalName: file.originalname,
-      mimeType: file.mimetype,
-      fileSize: file.size,
-    });
+    // Validate required fields
+    if (!body.userId || !body.taskTitle) {
+      throw new BadRequestException('userId and taskTitle are required');
+    }
 
-    return await this.fileUploadService.uploadFile(dto);
+    // Parse userId to number
+    const userId = parseInt(body.userId, 10);
+    if (isNaN(userId)) {
+      throw new BadRequestException('userId must be a valid number');
+    }
+
+    try {
+      // Upload to drive
+      const url = await this.driveService.uploadFile(file);
+
+      // Prepare DTO
+      const dto: CreateFileUploadDto = {
+        userId,
+        taskTitle: body.taskTitle,
+        originalName: file.originalname,
+        mimeType: file.mimetype,
+        fileSize: file.size,
+        fileUrl: url,
+      };
+
+      console.log('Uploading file:', {
+        userId: dto.userId,
+        taskTitle: dto.taskTitle,
+        originalName: dto.originalName,
+        mimeType: dto.mimeType,
+        fileSize: dto.fileSize,
+      });
+
+      return await this.fileUploadService.uploadFile(dto);
+    } catch (error) {
+      console.error('File upload error:', error);
+      throw error;
+    }
   }
 
   // ✅ Get all files
