@@ -40,16 +40,27 @@ export class FileUploadService {
     }
 
     // Check 24-hour rule
+    // Check daily upload limit (3 uploads per 24 hours)
     if (user.lastfileupload) {
       const twentyFourHoursAgo = new Date();
       twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
+      // If last upload was within 24 hours, check the upload count
       if (user.lastfileupload > twentyFourHoursAgo) {
-        const timeRemaining = this.getTimeRemaining(user.lastfileupload);
-        throw new BadRequestException(
-          `You can only upload one file every 24 hours. Please wait ${timeRemaining} before uploading again.`,
-        );
+        // User is within the 24-hour window
+        if (user.uploads >= 3) {
+          const timeRemaining = this.getTimeRemaining(user.lastfileupload);
+          throw new BadRequestException(
+            `You have reached your daily upload limit (3 files per day). Please wait ${timeRemaining} before uploading again.`,
+          );
+        }
+
+        user.uploads += 1;
+      } else {
+        user.uploads = 0;
       }
+    } else {
+      user.uploads = 1;
     }
 
     // Find task
@@ -73,6 +84,7 @@ export class FileUploadService {
     });
 
     // Update user's last upload timestamp
+
     user.lastfileupload = new Date();
 
     // Save both entities
