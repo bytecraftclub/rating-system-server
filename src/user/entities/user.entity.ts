@@ -35,6 +35,9 @@ export class User {
   isActive: boolean;
 
   @Column({ default: 0 })
+  uploads: number;
+
+  @Column({ default: 0 })
   score: number;
   @Column({ nullable: true })
   refreshtoken: string;
