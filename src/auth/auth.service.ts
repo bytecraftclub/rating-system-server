@@ -9,6 +9,7 @@ export interface LoginResponse {
   refresh_token: string;
   user: {
     id: string;
+    score: number;
     email: string;
     name: string;
     picture?: string;
@@ -28,8 +29,6 @@ export class AuthService {
   // Fixed version of your auth service methods
 
   async findOrCreateUser(googleUser: any) {
-    console.log('Google user data:', googleUser);
-
     try {
       // 1. Try to find a user by their Google ID first
       let user = await this.userRepository.findOneBy({
@@ -37,8 +36,6 @@ export class AuthService {
       });
 
       if (user) {
-        console.log('Found existing user by Google ID:', user.id);
-
         // Update user info (in case they changed their Google profile)
         user.email = googleUser.email;
         user.firstName = googleUser.firstName;
@@ -60,8 +57,6 @@ export class AuthService {
       user = await this.userRepository.findOneBy({ email: googleUser.email });
 
       if (user) {
-        console.log('Found existing user by email, linking Google account');
-
         // Link Google account to existing user
         user.googleId = googleUser.id;
         user.firstName = googleUser.firstName || user.firstName;
@@ -76,12 +71,11 @@ export class AuthService {
         user.refreshtoken = newRefreshToken;
 
         await this.userRepository.save(user);
-        console.log('Linked Google account to existing user');
+
         return user;
       }
 
       // 3. Create new user if none exists
-      console.log('Creating new user for Google ID:', googleUser.id);
 
       const refreshToken = this.jwtService.sign(
         { email: googleUser.email, sub: googleUser.id },
@@ -98,9 +92,7 @@ export class AuthService {
         role: 'user',
       });
 
-      console.log('New user object before save:', newUser);
       const savedUser = await this.userRepository.save(newUser);
-      console.log('Saved new user:', savedUser);
 
       return savedUser;
     } catch (error) {
@@ -127,9 +119,6 @@ export class AuthService {
   }
 
   async login(user: User) {
-    console.log('Logging in user:', user);
-
-    // Create JWT payload
     const payload = {
       email: user.email,
       sub: user.googleId || user.id,
@@ -151,6 +140,7 @@ export class AuthService {
         lastName: user.lastName,
         avatar: user.avatar,
         role: user.role,
+        score: user.score,
       },
     };
   }
@@ -170,6 +160,7 @@ export class AuthService {
         email: user.email,
         name: user.firstName,
         picture: user.avatar,
+        score: user.score,
       },
     };
   }
@@ -247,7 +238,6 @@ export class AuthService {
       });
 
       if (!user) {
-        console.log('❌ User not found for refresh token');
         throw new Error('User not found');
       }
 
@@ -266,14 +256,11 @@ export class AuthService {
       const newAccessToken = this.jwtService.sign(payload, { expiresIn: '1h' });
       const expiresAt = Date.now() + 60 * 60 * 1000; // 1 hour from now
 
-      console.log('✅ New access token generated');
-
       // 6. Optionally generate new refresh token for security (token rotation)
       const shouldRotateRefreshToken = true; // You can make this configurable
       let newRefreshToken = refreshToken;
 
       if (shouldRotateRefreshToken) {
-        console.log('🔄 Rotating refresh token...');
         newRefreshToken = this.jwtService.sign(
           { email: user.email, sub: user.googleId },
           { expiresIn: '30d' },
@@ -282,7 +269,6 @@ export class AuthService {
         // Update user's refresh token in database
         user.refreshtoken = newRefreshToken;
         await this.userRepository.save(user);
-        console.log('✅ Refresh token rotated');
       }
 
       return {
@@ -320,7 +306,6 @@ export class AuthService {
     if (user) {
       user.refreshtoken = '';
       await this.userRepository.save(user);
-      console.log('✅ Refresh token revoked');
     }
   }
 
