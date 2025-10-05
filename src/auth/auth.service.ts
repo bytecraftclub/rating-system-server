@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
+import { task } from 'src/file-upload/entities/task.entity';
 
 export interface LoginResponse {
   access_token: string;
@@ -14,6 +15,7 @@ export interface LoginResponse {
     name: string;
     picture?: string;
     role?: string;
+    tasks?: task[];
   };
 }
 
