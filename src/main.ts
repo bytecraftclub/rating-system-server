@@ -18,11 +18,9 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') || 3000;
   app.enableCors({
-    origin: 'https://your-frontend-domain.com', // 👈 replace with your frontend URL
-    credentials: true, // if you send cookies or auth headers
+    origin: 'https://rating-system.vercel.app/',
   });
   app.use(bodyParser.json({ limit: '10mb' }));
   await app.listen(port);
-  console.log(`🚀 Server is running on: http://localhost:${port}`);
 }
 bootstrap();
