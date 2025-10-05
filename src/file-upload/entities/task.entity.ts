@@ -26,5 +26,5 @@ export class task {
   files: FileUpload[];
 
   @ManyToMany(() => User, (user) => user.tasks)
-  user: User[];
+  users: User[];
 }
