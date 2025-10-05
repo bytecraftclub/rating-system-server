@@ -20,8 +20,9 @@ export class NotificationsController {
   @Post('notification')
   create(@Body() body: any) {
     const { taskName, approved, userId } = body;
+    console.log(body);
 
-    const isApproved = approved === true || approved === 'true';
+    const isApproved = approved == true || approved == 'true';
 
     return this.notificationsService.createNotification(
       taskName,
