@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Notification } from './entities/notification.entity';
 import { User } from 'src/user/entities/user.entity';
+import { task } from 'src/file-upload/entities/task.entity';
 
 @Injectable()
 export class NotificationsService {
@@ -12,20 +13,53 @@ export class NotificationsService {
     private readonly notificationRepo: Repository<Notification>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    @InjectRepository(task)
+    private readonly taskRepository: Repository<task>,
   ) {}
 
   // 1. Create a notification
+
   async createNotification(
     taskName: string,
     approved: boolean,
     userId: number,
   ): Promise<Notification> {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+    // Find user with tasks relation
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+      relations: ['tasks'], // Load user's completed tasks
+    });
     if (!user) throw new NotFoundException('User not found');
 
-    const message = approved
-      ? `🎉 Congratulations! Your task "${taskName}" has been approved and completed successfully!`
-      : `📨 ByteCraft has viewed your request.`;
+    let message = '';
+
+    if (approved) {
+      message = `🎉 Congratulations! Your task "${taskName}" has been approved and completed successfully!`;
+
+      // Find the task by name
+      const task = await this.taskRepository.findOne({
+        where: { title: taskName },
+      });
+
+      if (task) {
+        // Add task to user's completed tasks if not already there
+        if (!user.tasks) {
+          user.tasks = [];
+        }
+
+        const hasTask = user.tasks.some(
+          (completedTask) => completedTask.id === task.id,
+        );
+
+        if (!hasTask) {
+          user.tasks.push(task);
+          await this.userRepo.save(user);
+        }
+      }
+    } else {
+      message =
+        '❌ Your request has been declined — please review and try again.';
+    }
 
     const notification = this.notificationRepo.create({
       message,
@@ -35,7 +69,6 @@ export class NotificationsService {
 
     return await this.notificationRepo.save(notification);
   }
-
   async markMultipleAsRead(ids: string[]) {
     // Example with TypeORM
     await this.notificationRepo.update({ id: In(ids) }, { read: true });
