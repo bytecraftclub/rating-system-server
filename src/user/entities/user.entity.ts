@@ -1,4 +1,5 @@
 import { FileUpload } from 'src/file-upload/entities/file-upload.entity';
+import { task } from 'src/file-upload/entities/task.entity';
 import { Notification } from 'src/notifications/entities/notification.entity';
 import {
   Entity,
@@ -9,6 +10,7 @@ import {
   OneToMany,
   BeforeInsert,
   PrimaryColumn,
+  ManyToMany,
 } from 'typeorm';
 
 @Entity('users')
@@ -46,6 +48,9 @@ export class User {
 
   @Column({ type: 'timestamp', nullable: true })
   lastfileupload: Date;
+
+  @ManyToMany(() => task, (task) => task.user, { eager: true })
+  tasks: task[];
 
   @OneToMany(() => FileUpload, (file) => file.user, { eager: true })
   files: FileUpload[];
