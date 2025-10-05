@@ -31,15 +31,35 @@ export class FileUploadService {
   ) {}
 
   async uploadFile(dto: CreateFileUploadDto): Promise<{ message: string }> {
-    // Find user
+    // Find user with tasks relation
     const user = await this.userRepository.findOne({
       where: { id: dto.userId },
+      relations: ['tasks'], // Load user's completed tasks
     });
     if (!user) {
       throw new NotFoundException(`User with ID ${dto.userId} not found`);
     }
 
-    // Check 24-hour rule
+    // Find task
+    const task = await this.taskRepository.findOne({
+      where: { title: dto.taskTitle },
+    });
+    if (!task) {
+      throw new NotFoundException(
+        `Task with title "${dto.taskTitle}" not found`,
+      );
+    }
+
+    // Check if user has already completed this task
+    const hasCompletedTask = user.tasks.some(
+      (completedTask) => completedTask.id === task.id,
+    );
+    if (hasCompletedTask) {
+      throw new BadRequestException(
+        `You have already completed the task "${dto.taskTitle}". Each task can only be submitted once.`,
+      );
+    }
+
     // Check daily upload limit (3 uploads per 24 hours)
     if (user.lastfileupload) {
       const twentyFourHoursAgo = new Date();
@@ -54,23 +74,15 @@ export class FileUploadService {
             `You have reached your daily upload limit (3 files per day). Please wait ${timeRemaining} before uploading again.`,
           );
         }
-
+        // Still within 24 hours and under limit - increment the counter
         user.uploads += 1;
       } else {
-        user.uploads = 0;
+        // More than 24 hours have passed - reset the counter
+        user.uploads = 1;
       }
     } else {
+      // First upload ever
       user.uploads = 1;
-    }
-
-    // Find task
-    const task = await this.taskRepository.findOne({
-      where: { title: dto.taskTitle },
-    });
-    if (!task) {
-      throw new NotFoundException(
-        `Task with title "${dto.taskTitle}" not found`,
-      );
     }
 
     // Create file record
@@ -84,7 +96,6 @@ export class FileUploadService {
     });
 
     // Update user's last upload timestamp
-
     user.lastfileupload = new Date();
 
     // Save both entities
@@ -105,7 +116,6 @@ export class FileUploadService {
 
     return `${hours}h ${minutes}m`;
   }
-
   // ✅ Get all files
   async getAllFiles(): Promise<FileUpload[]> {
     return this.fileRepository.find({
