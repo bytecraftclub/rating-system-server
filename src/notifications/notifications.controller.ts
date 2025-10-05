@@ -22,11 +22,9 @@ export class NotificationsController {
     const { taskName, approved, userId } = body;
     console.log(body);
 
-    const isApproved = approved == true || approved == 'true';
-
     return this.notificationsService.createNotification(
       taskName,
-      isApproved,
+      Boolean(approved === true || approved === 'true'),
       Number(userId),
     );
   }
