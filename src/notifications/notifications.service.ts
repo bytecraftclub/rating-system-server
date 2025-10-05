@@ -25,7 +25,7 @@ export class NotificationsService {
 
     const message = approved
       ? `🎉 Congratulations! Your task "${taskName}" has been approved and completed successfully!`
-      : `⚠️ Update: Your task "${taskName}" requires revision. Please review the feedback and resubmit.`;
+      : `📨 ByteCraft has viewed your request.`;
 
     const notification = this.notificationRepo.create({
       message,
