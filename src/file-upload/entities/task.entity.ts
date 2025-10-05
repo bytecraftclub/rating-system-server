@@ -1,5 +1,12 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToMany,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { FileUpload } from './file-upload.entity';
+import { User } from 'src/user/entities/user.entity';
 
 @Entity('tasks')
 export class task {
@@ -17,4 +24,7 @@ export class task {
 
   @OneToMany(() => FileUpload, (file) => file.task, { eager: true })
   files: FileUpload[];
+
+  @ManyToMany(() => User, (user) => user.tasks)
+  user: User[];
 }
