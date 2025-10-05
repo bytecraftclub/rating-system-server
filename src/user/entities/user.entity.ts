@@ -11,6 +11,7 @@ import {
   BeforeInsert,
   PrimaryColumn,
   ManyToMany,
+  JoinTable,
 } from 'typeorm';
 
 @Entity('users')
@@ -49,7 +50,8 @@ export class User {
   @Column({ type: 'timestamp', nullable: true })
   lastfileupload: Date;
 
-  @ManyToMany(() => task, (task) => task.user, { eager: true })
+  @ManyToMany(() => task, (onetask) => onetask.users) // Changed: task.user -> task.users
+  @JoinTable() // Add this decorator - it's required on the owning side
   tasks: task[];
 
   @OneToMany(() => FileUpload, (file) => file.user, { eager: true })
