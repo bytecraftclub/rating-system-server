@@ -20,12 +20,10 @@ export class NotificationsController {
   @Post('notification')
   create(@Body() body: CreateNotificationDto) {
     const { taskName, approved, userId } = body;
-    console.log(body);
-
     return this.notificationsService.createNotification(
       taskName,
       approved,
-      Number(userId),
+      userId,
     );
   }
 
