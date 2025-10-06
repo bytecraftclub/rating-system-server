@@ -210,6 +210,11 @@ export class FileUploadService {
     // Delete from Google Drive (use driveFileId instead of name ideally)
     try {
       await this.googleDriveService.deleteFile(file.fileData);
+      await this.notificationService.createNotification(
+        file.task.title,
+        true,
+        file.user.id,
+      );
     } catch (err) {
       console.error('Failed to delete from Google Drive:', err.message);
     }
@@ -232,6 +237,11 @@ export class FileUploadService {
 
     try {
       await this.googleDriveService.deleteFile(file.fileData);
+      await this.notificationService.createNotification(
+        file.task.title,
+        false,
+        file.user.id,
+      );
     } catch (err) {
       console.error('Failed to delete from Google Drive:', err.message);
     }
