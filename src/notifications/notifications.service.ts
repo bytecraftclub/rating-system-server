@@ -24,51 +24,55 @@ export class NotificationsService {
     approved: boolean,
     userId: number,
   ): Promise<Notification> {
-    // Find user with tasks relation
+    console.log(approved);
     const user = await this.userRepo.findOne({
       where: { id: userId },
-      relations: ['tasks'], // Load user's completed tasks
+      relations: ['tasks'], // Load user's current completed tasks
     });
-    if (!user) throw new NotFoundException('User not found');
 
-    let message = '';
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    let message: string;
 
     if (approved) {
       message = `🎉 Congratulations! Your task "${taskName}" has been approved and completed successfully!`;
 
-      // Find the task by name
+      // Find the corresponding task
       const task = await this.taskRepository.findOne({
         where: { title: taskName },
       });
 
       if (task) {
-        // Add task to user's completed tasks if not already there
-        if (!user.tasks) {
-          user.tasks = [];
-        }
+        // Ensure user.tasks is initialized
+        user.tasks = user.tasks ?? [];
 
-        const hasTask = user.tasks.some(
+        const alreadyHasTask = user.tasks.some(
           (completedTask) => completedTask.id === task.id,
         );
 
-        if (!hasTask) {
+        if (!alreadyHasTask) {
           user.tasks.push(task);
           await this.userRepo.save(user);
         }
+      } else {
+        console.warn(`Task "${taskName}" not found in the database.`);
       }
     } else {
-      message =
-        '❌ Your request has been declined — please review and try again.';
+      message = `⚠️ Update: Your task "${taskName}" was not accepted. Please try again.`;
     }
 
+    // Create a notification linked to the user
     const notification = this.notificationRepo.create({
       message,
       user,
       read: false,
     });
 
-    return await this.notificationRepo.save(notification);
+    return this.notificationRepo.save(notification);
   }
+
   async markMultipleAsRead(ids: string[]) {
     // Example with TypeORM
     await this.notificationRepo.update({ id: In(ids) }, { read: true });
