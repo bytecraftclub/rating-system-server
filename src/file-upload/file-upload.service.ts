@@ -218,11 +218,7 @@ export class FileUploadService {
     } catch (err) {
       console.error('Failed to delete from Google Drive:', err.message);
     }
-    await this.notificationService.createNotification(
-      file.task.title,
-      false,
-      file.user.id,
-    );
+
     await this.fileRepository.remove(file);
     return `File  accepted, points added, and deleted successfully`;
   }
