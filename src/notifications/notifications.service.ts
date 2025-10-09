@@ -67,6 +67,7 @@ export class NotificationsService {
     const notification = this.notificationRepo.create({
       message,
       user,
+      createdAt: new Date(Date.now()),
       read: false,
     });
 
