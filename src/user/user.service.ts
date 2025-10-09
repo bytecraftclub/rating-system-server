@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { In, Not, Repository } from 'typeorm';
@@ -29,8 +29,18 @@ export class UserService {
     });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: number): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['tasks'], // Load the tasks relation
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    // You can now access user.tasks.length
+    return user;
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
