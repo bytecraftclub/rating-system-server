@@ -43,6 +43,9 @@ import { NotificationsModule } from './notifications/notifications.module';
           database: configService.get<string>('DB_NAME'),
           autoLoadEntities: true,
           synchronize: true,
+          ssl: {
+    rejectUnauthorized: false,
+  },
         };
       },
     }),
